@@ -17,6 +17,14 @@ namespace Sitecore.Support.Analytics.Pipelines.CreateVisits
   public class XForwardedFor : CreateVisitProcessor
   {
     /// <summary>
+    /// Gets or sets the header IP index.
+    /// </summary>
+    /// <value>
+    /// The header IP index.
+    /// </value>
+    public int HeaderIpIndex { get; set; }
+
+    /// <summary>
     /// Runs the processor.
     /// </summary>
     /// <param name="args">The arguments.</param>
@@ -36,7 +44,7 @@ namespace Sitecore.Support.Analytics.Pipelines.CreateVisits
         return;
       }
 
-      string ip = header.Split(',').Last().Trim();
+      string ip = this.GetIpFromHeader(header);
 
       if (string.IsNullOrEmpty(ip))
       {
@@ -66,6 +74,32 @@ namespace Sitecore.Support.Analytics.Pipelines.CreateVisits
     private void LogWrongIp([CanBeNull] string headerKey, [CanBeNull] string header)
     {
       Log.Warn(string.Format("{0} header does not store a valid IP address ({1})", headerKey, header), this);
+    }
+
+    /// <summary>
+    /// Gets IP from header.
+    /// </summary>
+    /// <param name="header">
+    /// The header.
+    /// </param>
+    /// <returns>
+    /// The <see cref="string"/>.
+    /// </returns>
+    [CanBeNull]
+    protected virtual string GetIpFromHeader([NotNull] string header)
+    {
+      Assert.ArgumentNotNull(header, "header");
+
+      string[] ips = header.Split(',');
+
+      int index = this.HeaderIpIndex;
+      string ip = index < ips.Length ? ips[index] : ips.LastOrDefault();
+      if (string.IsNullOrEmpty(ip))
+      {
+        return null;
+      }
+
+      return ip.Trim();
     }
   }
 }
